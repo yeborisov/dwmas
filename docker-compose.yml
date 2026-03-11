@@ -1,0 +1,17 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dwmas-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dwmas
+      POSTGRES_PASSWORD: dwmas
+      POSTGRES_DB: dwmas
+    ports:
+      - '5432:5432'
+    volumes:
+      - dwmas_pg_data:/var/lib/postgresql/data
+
+volumes:
+  dwmas_pg_data:

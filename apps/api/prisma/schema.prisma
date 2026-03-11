@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  DEVELOPER
+  DEVOPS
+  ADMIN
+}
+
+enum IssueStatus {
+  OPEN
+  CLOSED
+}
+
+enum RepoTokenSource {
+  USER_OAUTH
+  SYSTEM_TOKEN
+}
+
+enum SyncStatus {
+  IDLE
+  SYNCING
+  SUCCESS
+  ERROR
+}
+
+model User {
+  id          String   @id @default(cuid())
+  githubId    String   @unique
+  username    String
+  displayName String?
+  email       String?
+  avatarUrl   String?
+  role        Role     @default(DEVELOPER)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assignments UserRepositoryAssignment[]
+  repositoriesCreated Repository[] @relation("CreatedRepositories")
+  issues Issue[] @relation("IssueAuthor")
+  comments Comment[] @relation("CommentAuthor")
+  reports ReportTemplate[]
+  auditLogs AuditLog[] @relation("AuditActor")
+}
+
+model Repository {
+  id             String   @id @default(cuid())
+  githubRepoId   String   @unique
+  owner          String
+  name           String
+  fullName       String   @unique
+  isPrivate      Boolean
+  defaultBranch  String
+  tokenSource    RepoTokenSource @default(SYSTEM_TOKEN)
+  createdByUserId String
+  isActive       Boolean  @default(true)
+  syncStatus     SyncStatus @default(IDLE)
+  lastSyncedAt   DateTime?
+  lastSuccessfulSyncAt DateTime?
+  syncError      String?
+  sourceUpdatedAt DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  createdBy User @relation("CreatedRepositories", fields: [createdByUserId], references: [id])
+  assignments UserRepositoryAssignment[]
+  workflowRuns WorkflowRun[]
+  issues Issue[]
+}
+
+model UserRepositoryAssignment {
+  id           String @id @default(cuid())
+  userId       String
+  repositoryId String
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, repositoryId])
+}
+
+model WorkflowRun {
+  id          String   @id @default(cuid())
+  githubRunId String   @unique
+  repositoryId String
+  workflowName String
+  status      String
+  conclusion  String?
+  branch      String?
+  event       String?
+  actor       String?
+  commitSha   String?
+  htmlUrl     String?
+  logsUrl     String?
+  runNumber   Int?
+  startedAt   DateTime?
+  completedAt DateTime?
+  durationMs  Int?
+  sourceUpdatedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  jobs Job[]
+
+  @@index([repositoryId, status])
+  @@index([startedAt])
+}
+
+model Job {
+  id           String   @id @default(cuid())
+  githubJobId  String   @unique
+  workflowRunId String
+  name         String
+  status       String
+  conclusion   String?
+  startedAt    DateTime?
+  completedAt  DateTime?
+  durationMs   Int?
+  runnerName   String?
+  htmlUrl      String?
+
+  workflowRun WorkflowRun @relation(fields: [workflowRunId], references: [id], onDelete: Cascade)
+}
+
+model Issue {
+  id           String   @id @default(cuid())
+  repositoryId String
+  authorId     String
+  title        String
+  description  String
+  status       IssueStatus @default(OPEN)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  author User @relation("IssueAuthor", fields: [authorId], references: [id])
+  comments Comment[]
+}
+
+model Comment {
+  id         String   @id @default(cuid())
+  issueId    String
+  authorId   String
+  content    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  author User @relation("CommentAuthor", fields: [authorId], references: [id])
+}
+
+model ReportTemplate {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  type           String
+  configJson     Json
+  createdByUserId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  createdBy User @relation(fields: [createdByUserId], references: [id])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  action      String
+  entityType  String
+  entityId    String
+  metadataJson Json?
+  createdAt   DateTime @default(now())
+
+  actor User? @relation("AuditActor", fields: [actorUserId], references: [id])
+}

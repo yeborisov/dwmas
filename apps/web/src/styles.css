@@ -1,0 +1,230 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --bg: 222 47% 7%;
+    --bg-elevated: 222 39% 10%;
+    --surface: 222 33% 12%;
+    --surface-elevated: 222 30% 15%;
+    --surface-muted: 223 27% 18%;
+    --border: 217 24% 24%;
+    --border-strong: 217 24% 34%;
+    --text-primary: 214 24% 92%;
+    --text-secondary: 214 16% 78%;
+    --text-muted: 217 10% 62%;
+    --accent: 191 92% 58%;
+    --success: 151 80% 45%;
+    --warning: 37 92% 57%;
+    --error: 0 84% 63%;
+    --info: 217 92% 60%;
+  }
+
+  html,
+  body,
+  #root {
+    @apply min-h-screen;
+  }
+
+  body {
+    @apply antialiased;
+    background: hsl(var(--bg));
+    color: hsl(var(--text-primary));
+    font-feature-settings: 'cv11' on, 'ss01' on;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply tracking-tight;
+    color: hsl(var(--text-primary));
+  }
+
+  a {
+    @apply transition-colors;
+    color: hsl(var(--accent));
+  }
+
+  a:hover {
+    color: hsl(var(--text-primary));
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    @apply transition;
+  }
+
+  ::selection {
+    @apply bg-cyan-500/35;
+  }
+}
+
+@layer components {
+  .app-shell {
+    @apply min-h-screen;
+    background: hsl(var(--bg));
+  }
+
+  .content-wrap {
+    @apply mx-auto w-full max-w-[1280px] px-4 md:px-6 lg:px-8;
+  }
+
+  .surface {
+    @apply rounded-xl border shadow-sm;
+    background: hsl(var(--surface));
+    border-color: hsl(var(--border));
+    box-shadow: 0 1px 0 hsl(var(--border) / 0.45), 0 8px 24px rgb(0 0 0 / 0.2);
+  }
+
+  .surface-muted {
+    @apply rounded-lg border;
+    background: hsl(var(--surface-muted));
+    border-color: hsl(var(--border));
+  }
+
+  .surface-elevated {
+    @apply rounded-xl border;
+    background: hsl(var(--surface-elevated));
+    border-color: hsl(var(--border-strong));
+  }
+
+  .field {
+    @apply h-10 w-full rounded-lg border px-3 text-sm outline-none;
+    background: hsl(var(--bg-elevated));
+    border-color: hsl(var(--border));
+    color: hsl(var(--text-primary));
+  }
+
+  .field::placeholder {
+    color: hsl(var(--text-muted));
+  }
+
+  .field option {
+    background: hsl(var(--bg-elevated));
+    color: hsl(var(--text-primary));
+  }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-text-fill-color: hsl(var(--text-primary));
+    -webkit-box-shadow: 0 0 0px 1000px hsl(var(--bg-elevated)) inset;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  .field:focus {
+    border-color: hsl(var(--accent));
+    box-shadow: 0 0 0 3px hsl(var(--accent) / 0.2);
+  }
+
+  .textarea-field {
+    @apply min-h-24 resize-y py-2;
+  }
+
+  .btn {
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-lg border px-3.5 text-sm font-medium outline-none transition;
+    border-color: hsl(var(--border));
+    color: hsl(var(--text-primary));
+    background: hsl(var(--surface-muted));
+  }
+
+  .btn:hover {
+    background: hsl(var(--surface-elevated));
+    border-color: hsl(var(--border-strong));
+  }
+
+  .btn:focus-visible {
+    box-shadow: 0 0 0 3px hsl(var(--accent) / 0.25);
+  }
+
+  .btn-primary {
+    border-color: hsl(var(--accent) / 0.65);
+    color: hsl(220 45% 8%);
+    background: hsl(var(--accent));
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.05);
+    border-color: hsl(var(--accent));
+  }
+
+  .btn-secondary {
+    @apply bg-transparent;
+    border-color: hsl(var(--border-strong));
+    color: hsl(var(--text-secondary));
+  }
+
+  .btn-secondary:hover {
+    color: hsl(var(--text-primary));
+    background: hsl(var(--surface-muted));
+  }
+
+  .btn-ghost {
+    @apply border-transparent bg-transparent;
+    color: hsl(var(--text-secondary));
+  }
+
+  .btn-ghost:hover {
+    color: hsl(var(--text-primary));
+    background: hsl(var(--surface-muted));
+  }
+
+  .btn-danger {
+    border-color: hsl(var(--error) / 0.55);
+    background: hsl(var(--error) / 0.16);
+    color: hsl(var(--error));
+  }
+
+  .btn-danger:hover {
+    background: hsl(var(--error) / 0.24);
+    border-color: hsl(var(--error));
+  }
+
+  .btn-success {
+    border-color: hsl(var(--success) / 0.5);
+    background: hsl(var(--success) / 0.16);
+    color: hsl(var(--success));
+  }
+
+  .btn-success:hover {
+    background: hsl(var(--success) / 0.24);
+  }
+
+  .kpi-value {
+    @apply text-2xl font-semibold;
+    color: hsl(var(--text-primary));
+  }
+
+  .kpi-label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.08em];
+    color: hsl(var(--text-muted));
+  }
+
+  .state-box {
+    @apply surface-muted flex flex-col items-center justify-center gap-3 border border-dashed px-6 py-10 text-center;
+    border-color: hsl(var(--border-strong));
+  }
+
+  .tab-trigger {
+    @apply inline-flex items-center gap-2 rounded-md border border-transparent px-3 py-1.5 text-sm font-medium;
+    color: hsl(var(--text-secondary));
+  }
+
+  .tab-trigger:hover {
+    background: hsl(var(--surface-muted));
+    color: hsl(var(--text-primary));
+  }
+
+  .tab-trigger-active {
+    background: hsl(var(--surface-elevated));
+    border-color: hsl(var(--border-strong));
+    color: hsl(var(--text-primary));
+  }
+}

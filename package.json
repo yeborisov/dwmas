@@ -1,0 +1,23 @@
+{
+  "name": "dwmas",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.12.1",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @dwmas/api --filter @dwmas/web dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "format": "pnpm -r format",
+    "prisma:generate": "mkdir -p apps/api/prisma && cp prisma/schema.prisma apps/api/prisma/schema.prisma && cd apps/api && PRISMA_GENERATE_SKIP_AUTOINSTALL=1 pnpm exec prisma generate --schema prisma/schema.prisma",
+    "prisma:migrate": "mkdir -p apps/api/prisma && cp prisma/schema.prisma apps/api/prisma/schema.prisma && cd apps/api && PRISMA_GENERATE_SKIP_AUTOINSTALL=1 pnpm exec prisma migrate dev --schema prisma/schema.prisma",
+    "prisma:seed": "cd apps/api && pnpm exec tsx src/prisma/seed.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.20.0",
+    "eslint": "^9.20.1",
+    "prettier": "^3.5.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.24.1"
+  }
+}
