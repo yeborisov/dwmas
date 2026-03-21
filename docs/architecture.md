@@ -17,7 +17,7 @@ flowchart LR
   end
 
   subgraph External
-    G[GitHub API]
+    G["GitHub API"]
   end
 
   A -->|REST/JSON + cookies| B
