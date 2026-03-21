@@ -5,7 +5,7 @@
 ```mermaid
 flowchart LR
   subgraph Client
-    A[React SPA (web)]
+  A["React SPA (web)"]
   end
 
   subgraph Platform
