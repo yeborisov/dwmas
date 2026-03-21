@@ -9,7 +9,7 @@ sequenceDiagram
   participant DB as PostgreSQL
   participant RT as SSE/Socket
 
-  Note over UI,DB: GitHub is source of truth&#59; DB is cache/snapshot/history
+  Note over UI,DB: GitHub is source of truth "DB is cache/snapshot/history"
 
   UI->>API: POST /api/repositories/:repoId/sync
   API->>DB: Load repository metadata
