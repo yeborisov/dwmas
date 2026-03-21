@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import type { NavItem } from './SidebarNav';
 import { SidebarNav } from './SidebarNav';
 import { Topbar } from './Topbar';
+import { AppFooter } from './AppFooter';
 
 interface AppShellProps {
   navItems: NavItem[];
@@ -21,7 +22,7 @@ export function AppShell({ navItems, username, role, children }: AppShellProps) 
   );
 
   return (
-    <div className="app-shell">
+    <div className="app-shell flex min-h-screen flex-col">
       <Topbar
         title={activeItem?.label ?? 'DevOps Workspace'}
         subtitle="Workflow monitoring, insights and operations"
@@ -29,18 +30,33 @@ export function AppShell({ navItems, username, role, children }: AppShellProps) 
         role={role}
         onOpenSidebar={() => setOpen(true)}
       />
-      <div className="mx-auto flex w-full max-w-[1480px]">
+
+      <div className="mx-auto flex w-full max-w-[1480px] flex-1">
+        {/* Sidebar */}
         <aside
-          className={`fixed inset-y-14 left-0 z-30 w-64 transform border-r border-[hsl(var(--border))] bg-[hsl(var(--bg-elevated))] p-3 transition md:sticky md:top-14 md:h-[calc(100vh-56px)] md:translate-x-0 ${
+          className={`fixed inset-y-14 left-0 z-30 w-64 transform overflow-y-auto border-r border-[hsl(var(--border))] bg-[hsl(var(--bg-elevated))] p-3 transition md:sticky md:top-14 md:h-[calc(100vh-56px)] md:translate-x-0 ${
             open ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
           <SidebarNav items={navItems} onNavigate={() => setOpen(false)} />
         </aside>
-        {open ? <button className="fixed inset-0 top-14 z-20 bg-black/50 md:hidden" onClick={() => setOpen(false)} /> : null}
-        <main className="w-full py-5 md:py-6">
-          <div className="content-wrap space-y-5">{children}</div>
-        </main>
+
+        {/* Overlay for mobile sidebar */}
+        {open ? (
+          <button
+            className="fixed inset-0 top-14 z-20 bg-black/50 md:hidden"
+            onClick={() => setOpen(false)}
+            aria-label="Close navigation"
+          />
+        ) : null}
+
+        {/* Main content area with footer */}
+        <div className="flex w-full min-w-0 flex-col">
+          <main className="flex-1 py-5 md:py-6">
+            <div className="content-wrap space-y-5">{children}</div>
+          </main>
+          <AppFooter />
+        </div>
       </div>
     </div>
   );

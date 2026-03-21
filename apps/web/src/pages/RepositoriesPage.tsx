@@ -32,10 +32,9 @@ export function RepositoriesPage() {
   const [name, setName] = useState('');
   const [repositoryUrl, setRepositoryUrl] = useState('');
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['repos'],
-    queryFn: async () => (await api.get('/repositories')).data,
-    staleTime: 30_000
+    queryFn: async () => (await api.get('/repositories')).data
   });
   const repos: Repository[] = data?.data ?? [];
 
@@ -85,8 +84,8 @@ export function RepositoriesPage() {
         tabs={<Tabs items={[{ to: '/repositories', label: 'Repositories', end: true }, { to: '/analytics', label: 'Analytics' }, { to: '/reports', label: 'Reports' }]} />}
         actions={
           <div className="flex items-center gap-2">
-            <button className="btn btn-secondary" onClick={() => refetch()}>
-              Refresh list
+            <button className="btn btn-secondary" onClick={() => refetch()} disabled={isFetching}>
+              {isFetching ? 'Refreshing…' : 'Refresh list'}
             </button>
             <button className="btn btn-primary" onClick={() => syncAllMutation.mutate()} disabled={syncAllMutation.isPending || !repos.length}>
               {syncAllMutation.isPending ? 'Syncing all...' : 'Sync all repositories'}

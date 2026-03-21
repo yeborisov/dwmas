@@ -22,7 +22,7 @@ workflowsRouter.get('/', async (req, res) => {
             },
             select: { id: true }
           })
-        ).map((repo) => repo.id)
+        ).map((repo: { id: string }) => repo.id)
       : undefined;
 
   const accessibleRepoIds = allowedRepoIds
@@ -31,7 +31,7 @@ workflowsRouter.get('/', async (req, res) => {
         await prisma.repository.findMany({
           select: { id: true }
         })
-      ).map((repo) => repo.id);
+      ).map((repo: { id: string }) => repo.id);
 
   if (refresh && requestedRepoId) {
     await syncRepositoryRuns(requestedRepoId).catch(() => undefined);
@@ -113,106 +113,111 @@ workflowsRouter.get('/:workflowId/issues', async (req, res) => {
 });
 
 workflowsRouter.post('/:workflowId/issues', async (req, res) => {
-  const workflowId = String(req.params.workflowId);
-  const run = await prisma.workflowRun.findUnique({
-    where: { id: workflowId },
-    include: { repository: true }
-  });
-
-  if (!run) return res.status(404).json({ success: false, message: 'Workflow not found' });
-
-  if ((run.conclusion || '').toLowerCase() !== 'failure') {
-    return res.status(400).json({ success: false, message: 'Issue creation is only available for failed workflow runs' });
-  }
-
-  if (req.user!.role === 'DEVELOPER') {
-    const allowed = await prisma.repository.findFirst({
-      where: {
-        id: run.repositoryId,
-        OR: [{ createdByUserId: req.user!.id }, { assignments: { some: { userId: req.user!.id } } }]
-      },
-      select: { id: true }
+  try {
+    const workflowId = String(req.params.workflowId);
+    const run = await prisma.workflowRun.findUnique({
+      where: { id: workflowId },
+      include: { repository: true }
     });
 
-    if (!allowed) return res.status(403).json({ success: false, message: 'No repository access for this workflow run' });
-  }
+    if (!run) return res.status(404).json({ success: false, message: 'Workflow not found' });
 
-  const buildIssueBody = () =>
-    [
-      `DWMAS detected a failed workflow run and opened this issue automatically.`,
-      '',
-      `Repository: ${run.repository.fullName}`,
-      `Run ID: ${run.id}`,
-      `Status: ${run.status}`,
-      `Conclusion: ${run.conclusion || 'unknown'}`,
-      `Branch: ${run.branch || '-'}`,
-      `Actor: ${run.actor || '-'}`,
-      `Started: ${run.startedAt ? new Date(run.startedAt).toISOString() : '-'}`,
-      run.htmlUrl ? `Run URL: ${run.htmlUrl}` : null
-    ]
-      .filter(Boolean)
-      .join('\n');
+    if ((run.conclusion || '').toLowerCase() !== 'failure') {
+      return res.status(400).json({ success: false, message: 'Issue creation is only available for failed workflow runs' });
+    }
 
-  const existing = await prisma.issue.findFirst({
-    where: {
-      repositoryId: run.repositoryId,
-      title: {
-        contains: run.workflowName,
-        mode: 'insensitive'
-      },
-      status: 'OPEN'
-    },
-    orderBy: { createdAt: 'desc' }
-  });
-
-  if (existing) {
-    if (!/github issue:/i.test(existing.description)) {
-      const ghIssue = await githubService.createIssue(
-        run.repository.owner,
-        run.repository.name,
-        `[DWMAS] Workflow failure: ${run.workflowName}`,
-        buildIssueBody()
-      );
-
-      const updated = await prisma.issue.update({
-        where: { id: existing.id },
-        data: {
-          description: `${existing.description}\n\nGitHub issue: ${ghIssue.data.html_url}`
+    if (req.user!.role === 'DEVELOPER') {
+      const allowed = await prisma.repository.findFirst({
+        where: {
+          id: run.repositoryId,
+          OR: [{ createdByUserId: req.user!.id }, { assignments: { some: { userId: req.user!.id } } }]
         },
-        include: {
-          author: { select: { id: true, username: true, displayName: true } },
-          comments: true
-        }
+        select: { id: true }
       });
 
-      return res.json({ success: true, data: updated, message: 'Existing issue linked to GitHub issue' });
+      if (!allowed) return res.status(403).json({ success: false, message: 'No repository access for this workflow run' });
     }
 
-    return res.json({ success: true, data: existing, message: 'Existing open issue reused' });
+    const buildIssueBody = () =>
+      [
+        `DWMAS detected a failed workflow run and opened this issue automatically.`,
+        '',
+        `Repository: ${run.repository.fullName}`,
+        `Run ID: ${run.id}`,
+        `Status: ${run.status}`,
+        `Conclusion: ${run.conclusion || 'unknown'}`,
+        `Branch: ${run.branch || '-'}`,
+        `Actor: ${run.actor || '-'}`,
+        `Started: ${run.startedAt ? new Date(run.startedAt).toISOString() : '-'}`,
+        run.htmlUrl ? `Run URL: ${run.htmlUrl}` : null
+      ]
+        .filter(Boolean)
+        .join('\n');
+
+    const existing = await prisma.issue.findFirst({
+      where: {
+        repositoryId: run.repositoryId,
+        title: {
+          contains: run.workflowName,
+          mode: 'insensitive'
+        },
+        status: 'OPEN'
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    if (existing) {
+      if (!/github issue:/i.test(existing.description)) {
+        const ghIssue = await githubService.createIssue(
+          run.repository.owner,
+          run.repository.name,
+          `[DWMAS] Workflow failure: ${run.workflowName}`,
+          buildIssueBody()
+        );
+
+        const updated = await prisma.issue.update({
+          where: { id: existing.id },
+          data: {
+            description: `${existing.description}\n\nGitHub issue: ${ghIssue.data.html_url}`
+          },
+          include: {
+            author: { select: { id: true, username: true, displayName: true } },
+            comments: true
+          }
+        });
+
+        return res.json({ success: true, data: updated, message: 'Existing issue linked to GitHub issue' });
+      }
+
+      return res.json({ success: true, data: existing, message: 'Existing open issue reused' });
+    }
+
+    const title = `Workflow failure: ${run.workflowName}`;
+    const ghIssue = await githubService.createIssue(
+      run.repository.owner,
+      run.repository.name,
+      `[DWMAS] ${title}`,
+      buildIssueBody()
+    );
+
+    const description = `${buildIssueBody()}\n\nGitHub issue: ${ghIssue.data.html_url}`;
+
+    const issue = await prisma.issue.create({
+      data: {
+        repositoryId: run.repositoryId,
+        authorId: req.user!.id,
+        title,
+        description
+      },
+      include: {
+        author: { select: { id: true, username: true, displayName: true } },
+        comments: true
+      }
+    });
+
+    return res.status(201).json({ success: true, data: issue });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to create GitHub issue';
+    return res.status(502).json({ success: false, message });
   }
-
-  const title = `Workflow failure: ${run.workflowName}`;
-  const ghIssue = await githubService.createIssue(
-    run.repository.owner,
-    run.repository.name,
-    `[DWMAS] ${title}`,
-    buildIssueBody()
-  );
-
-  const description = `${buildIssueBody()}\n\nGitHub issue: ${ghIssue.data.html_url}`;
-
-  const issue = await prisma.issue.create({
-    data: {
-      repositoryId: run.repositoryId,
-      authorId: req.user!.id,
-      title,
-      description
-    },
-    include: {
-      author: { select: { id: true, username: true, displayName: true } },
-      comments: true
-    }
-  });
-
-  return res.status(201).json({ success: true, data: issue });
 });

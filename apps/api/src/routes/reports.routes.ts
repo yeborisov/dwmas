@@ -129,8 +129,8 @@ reportsRouter.post('/templates/:templateId/apply', async (req, res) => {
     template,
     summary: {
       totalRuns: rows.length,
-      failedRuns: rows.filter((r) => r.conclusion === 'failure').length,
-      successfulRuns: rows.filter((r) => r.conclusion === 'success').length
+      failedRuns: rows.filter((r: typeof rows[number]) => r.conclusion === 'failure').length,
+      successfulRuns: rows.filter((r: typeof rows[number]) => r.conclusion === 'success').length
     },
     rows
   };
@@ -152,7 +152,7 @@ reportsRouter.get('/templates/:templateId/export.csv', requireRoles('DEVOPS', 'A
   });
 
   const csv = stringify(
-    rows.map((row) => ({
+    rows.map((row: typeof rows[number]) => ({
       repository: row.repository.fullName,
       workflowName: row.workflowName,
       status: row.status,

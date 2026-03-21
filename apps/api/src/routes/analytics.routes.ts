@@ -32,9 +32,9 @@ analyticsRouter.get('/failure-rate', requireAuth, async (_req, res) => {
       }
     }
   });
-  const data = repos.map((repo) => {
+  const data = repos.map((repo: any) => {
     const total = repo.workflowRuns.length;
-    const failed = repo.workflowRuns.filter((r) => r.conclusion === 'failure').length;
+    const failed = repo.workflowRuns.filter((r: any) => r.conclusion === 'failure').length;
     return { repository: repo.fullName, failureRate: total ? Number(((failed / total) * 100).toFixed(2)) : 0 };
   });
   res.json({ success: true, data });

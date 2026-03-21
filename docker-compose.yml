@@ -1,5 +1,11 @@
-version: '3.9'
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: dwmas-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+
   postgres:
     image: postgres:16-alpine
     container_name: dwmas-postgres
@@ -12,6 +18,63 @@ services:
       - '5432:5432'
     volumes:
       - dwmas_pg_data:/var/lib/postgresql/data
+
+  github-gateway:
+    build:
+      context: .
+      dockerfile: apps/github-gateway/Dockerfile
+    container_name: dwmas-github-gateway
+    restart: unless-stopped
+    env_file: .env.example
+    environment:
+      NODE_ENV: development
+    ports:
+      - "4400:4000"
+    depends_on:
+      - redis
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: dwmas-api
+    restart: unless-stopped
+    env_file: .env.example
+    environment:
+      NODE_ENV: development
+    ports:
+      - '3000:3000'
+    depends_on:
+      - postgres
+      - github-gateway
+      - redis
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    container_name: dwmas-worker
+    restart: unless-stopped
+    env_file: .env.example
+    environment:
+      NODE_ENV: development
+    depends_on:
+      - redis
+      - github-gateway
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: dwmas-web
+    restart: unless-stopped
+    env_file: .env.example
+    environment:
+      NODE_ENV: development
+    ports:
+      - '5174:5173'
+    depends_on:
+      - api
 
 volumes:
   dwmas_pg_data:

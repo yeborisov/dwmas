@@ -1,6 +1,13 @@
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { z } from 'zod';
 
+// Load .env from project root (../../.env relative to apps/api/src/config/)
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootEnv = path.resolve(__dirname, '..', '..', '..', '..', '.env');
+dotenv.config({ path: rootEnv });
+// Also try CWD as fallback
 dotenv.config();
 
 const envSchema = z.object({
@@ -18,7 +25,8 @@ const envSchema = z.object({
   ADMIN_GITHUB_IDS: z.string().optional(),
   ADMIN_GITHUB_USERNAMES: z.string().optional(),
   DEVOPS_GITHUB_IDS: z.string().optional(),
-  DEVOPS_GITHUB_USERNAMES: z.string().optional()
+  DEVOPS_GITHUB_USERNAMES: z.string().optional(),
+  GITHUB_CACHE_TTL_MS: z.coerce.number().optional()
 });
 
 export const env = envSchema.parse(process.env);

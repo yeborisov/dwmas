@@ -18,6 +18,14 @@ import { UsersPage } from './pages/UsersPage';
 import { IssueDetailsPage } from './pages/IssueDetailsPage';
 import { ReportsPage } from './pages/ReportsPage';
 
+function AuthRedirect({ children }: { children: JSX.Element }) {
+  const user = useAuthStore((s) => s.user);
+  const isBootstrapping = useAuthStore((s) => s.isBootstrapping);
+  if (isBootstrapping) return children;
+  if (user) return <Navigate to="/dashboard" replace />;
+  return children;
+}
+
 export function AppRouter() {
   const setUser = useAuthStore((s) => s.setUser);
   const setBootstrapping = useAuthStore((s) => s.setBootstrapping);
@@ -53,9 +61,9 @@ export function AppRouter() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<AuthRedirect><HomePage /></AuthRedirect>} />
         <Route path="/about" element={<AboutPage />} />
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login" element={<AuthRedirect><LoginPage /></AuthRedirect>} />
 
         <Route
           path="/dashboard"

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { Prisma } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { z } from 'zod';
 import { prisma } from '../config/prisma.js';
 import { requireAuth, requireRoles } from '../middleware/auth.js';
@@ -103,7 +103,7 @@ repositoriesRouter.post('/', requireRoles('DEVELOPER', 'DEVOPS', 'ADMIN'), async
     const hydrated = await prisma.repository.findUnique({ where: { id: created.id } });
     return res.status(201).json({ success: true, data: hydrated ?? created });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
       return res.status(409).json({ success: false, message: 'Repository is already connected' });
     }
     throw error;

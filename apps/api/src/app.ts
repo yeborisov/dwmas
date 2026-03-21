@@ -1,6 +1,6 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import express from 'express';
+import express, { type RequestHandler } from 'express';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import pinoHttp from 'pino-http';
@@ -44,7 +44,8 @@ export function createApp() {
   app.use(cookieParser());
   app.use(passport.initialize());
 
-  app.use('/api/auth', rateLimit({ windowMs: 60_000, max: 20 }), authRouter);
+  const authRateLimiter = rateLimit({ windowMs: 60_000, max: 20 }) as unknown as RequestHandler;
+  app.use('/api/auth', authRateLimiter, authRouter);
   app.get('/api/me', requireAuth, (req, res) => res.json({ success: true, data: req.user }));
   app.post('/api/logout', (_req, res) => {
     res.clearCookie('dwmas_token');

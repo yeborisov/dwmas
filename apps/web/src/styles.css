@@ -227,4 +227,49 @@
     border-color: hsl(var(--border-strong));
     color: hsl(var(--text-primary));
   }
+
+  /* Status badge semantic colours */
+  .badge-success {
+    @apply border-emerald-500/30 bg-emerald-500/12 text-emerald-300;
+  }
+
+  .badge-failure,
+  .badge-error {
+    @apply border-rose-500/30 bg-rose-500/12 text-rose-300;
+  }
+
+  .badge-warning,
+  .badge-timed_out {
+    @apply border-amber-500/30 bg-amber-500/12 text-amber-300;
+  }
+
+  .badge-info,
+  .badge-in_progress,
+  .badge-queued {
+    @apply border-sky-500/30 bg-sky-500/12 text-sky-300;
+  }
+
+  .badge-neutral,
+  .badge-cancelled,
+  .badge-skipped {
+    @apply border-slate-500/30 bg-slate-500/12 text-slate-300;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--bg));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply rounded;
+    background: hsl(var(--border));
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--border-strong));
+  }
 }

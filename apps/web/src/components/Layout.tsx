@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { AppShell } from './AppShell';
 import { useAuthStore } from '../store/auth';
+import { AppFooter } from './AppFooter';
 
 export function Layout() {
   const user = useAuthStore((s) => s.user);
@@ -45,6 +46,7 @@ export function Layout() {
       <main className="content-wrap py-6 md:py-8">
         <Outlet />
       </main>
+      <AppFooter />
     </div>
   );
 }
