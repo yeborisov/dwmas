@@ -9,7 +9,7 @@ flowchart LR
   end
 
   subgraph Platform
-    B[API (Express + Prisma)]
+    B["API (Express + Prisma)"]
     C[GitHub Gateway]
     D[Worker]
     E[(PostgreSQL)]
