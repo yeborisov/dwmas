@@ -3,6 +3,7 @@
 ## High-level view
 
 ```mermaid
+
 flowchart LR
   subgraph Client
     A["React SPA (web)"]
@@ -22,11 +23,11 @@ flowchart LR
 
   A -->|REST/JSON + cookies| B
   A -->|Socket.IO + SSE| B
-  B -->|Auth (GitHub OAuth)| C
+  B -->|"Auth (GitHub OAuth)"| C
   B -->|DB reads/writes| E
   B <-->|Pub/Sub events| F
   C -->|Octokit| G
-  D -->|Queues (BullMQ)| F
+  D -->|"Queues (BullMQ)"| F
   D -->|Syncs data| G
   D -->|Persist snapshots| E
   B -->|Dispatch sync jobs| D
