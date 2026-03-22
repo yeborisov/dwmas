@@ -22,6 +22,25 @@
     --info: 217 92% 60%;
   }
 
+  .theme-light {
+    color-scheme: light;
+    --bg: 210 33% 98%;
+    --bg-elevated: 210 25% 96%;
+    --surface: 0 0% 100%;
+    --surface-elevated: 210 25% 95%;
+    --surface-muted: 210 22% 93%;
+    --border: 210 16% 82%;
+    --border-strong: 210 20% 70%;
+    --text-primary: 215 25% 18%;
+    --text-secondary: 215 16% 35%;
+    --text-muted: 215 12% 48%;
+    --accent: 191 92% 46%;
+    --success: 151 72% 36%;
+    --warning: 37 92% 50%;
+    --error: 0 74% 54%;
+    --info: 217 80% 46%;
+  }
+
   html,
   body,
   #root {

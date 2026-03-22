@@ -25,7 +25,7 @@ services:
       dockerfile: apps/github-gateway/Dockerfile
     container_name: dwmas-github-gateway
     restart: unless-stopped
-    env_file: .env.example
+    env_file: .env
     environment:
       NODE_ENV: development
     ports:
@@ -39,7 +39,7 @@ services:
       dockerfile: apps/api/Dockerfile
     container_name: dwmas-api
     restart: unless-stopped
-    env_file: .env.example
+    env_file: .env
     environment:
       NODE_ENV: development
     ports:
@@ -55,7 +55,7 @@ services:
       dockerfile: apps/worker/Dockerfile
     container_name: dwmas-worker
     restart: unless-stopped
-    env_file: .env.example
+    env_file: .env
     environment:
       NODE_ENV: development
     depends_on:
@@ -68,7 +68,7 @@ services:
       dockerfile: apps/web/Dockerfile
     container_name: dwmas-web
     restart: unless-stopped
-    env_file: .env.example
+    env_file: .env
     environment:
       NODE_ENV: development
     ports:

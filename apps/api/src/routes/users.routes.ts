@@ -1,16 +1,58 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import bcrypt from 'bcryptjs';
 import { prisma } from '../config/prisma.js';
 import { requireAuth, requireRoles } from '../middleware/auth.js';
+
+const createSchema = z.object({
+  username: z.string().min(3),
+  password: z.string().min(8),
+  role: z.enum(['DEVELOPER', 'DEVOPS', 'ADMIN']).default('DEVELOPER'),
+  githubId: z.string().optional(),
+  displayName: z.string().optional(),
+  email: z.string().email().optional(),
+  repositoryIds: z.array(z.string()).optional()
+});
 
 const updateSchema = z.object({
   role: z.enum(['DEVELOPER', 'DEVOPS', 'ADMIN']).optional(),
   isActive: z.boolean().optional(),
-  repositoryIds: z.array(z.string()).optional()
+  repositoryIds: z.array(z.string()).optional(),
+  password: z.string().min(8).optional()
 });
 
 export const usersRouter = Router();
 usersRouter.use(requireAuth, requireRoles('ADMIN'));
+
+usersRouter.post('/', async (req, res) => {
+  const parsed = createSchema.parse(req.body);
+  const { password, repositoryIds, githubId, ...rest } = parsed;
+  const passwordHash = await bcrypt.hash(password, 10);
+  const resolvedGithubId = githubId && githubId.trim().length > 0 ? githubId : `local_${rest.username}`;
+
+  try {
+    const user = await prisma.user.create({
+      data: {
+        ...rest,
+        githubId: resolvedGithubId,
+        passwordHash
+      }
+    });
+
+    if (repositoryIds?.length) {
+      await prisma.userRepositoryAssignment.createMany({
+        data: repositoryIds.map((repositoryId) => ({ userId: user.id, repositoryId }))
+      });
+    }
+  const { passwordHash: _omitted, ...safeUser } = user;
+  res.status(201).json({ success: true, data: safeUser });
+  } catch (error: any) {
+    if (error?.code === 'P2002') {
+      return res.status(409).json({ success: false, message: 'Username or GitHub ID already exists' });
+    }
+    return res.status(500).json({ success: false, message: 'Failed to create user' });
+  }
+});
 
 usersRouter.get('/', async (_req, res) => {
   const users = await prisma.user.findMany({
@@ -46,9 +88,14 @@ usersRouter.get('/:userId', async (req, res) => {
 
 usersRouter.put('/:userId', async (req, res) => {
   const parsed = updateSchema.parse(req.body);
-  const { repositoryIds, ...rest } = parsed;
+  const { repositoryIds, password, ...rest } = parsed;
 
-  const user = await prisma.user.update({ where: { id: req.params.userId }, data: rest });
+  const data: Record<string, unknown> = { ...rest };
+  if (password) {
+    data.passwordHash = await bcrypt.hash(password, 10);
+  }
+
+  const user = await prisma.user.update({ where: { id: req.params.userId }, data });
   if (repositoryIds) {
     await prisma.userRepositoryAssignment.deleteMany({ where: { userId: user.id } });
     await prisma.userRepositoryAssignment.createMany({

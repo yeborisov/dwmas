@@ -7,5 +7,9 @@ export default defineConfig({
     // Prefer TS/TSX source files over stale compiled JS files in src/
     extensions: ['.tsx', '.ts', '.jsx', '.js', '.json']
   },
-  server: { port: 5173 }
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+    strictPort: true
+  }
 });

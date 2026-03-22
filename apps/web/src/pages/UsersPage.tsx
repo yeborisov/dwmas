@@ -20,6 +20,11 @@ export function UsersPage() {
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [selectedRole, setSelectedRole] = useState<'DEVELOPER' | 'DEVOPS' | 'ADMIN'>('DEVELOPER');
   const [selectedRepoIds, setSelectedRepoIds] = useState<string[]>([]);
+  const [selectedPassword, setSelectedPassword] = useState('');
+  const [newUsername, setNewUsername] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newRole, setNewRole] = useState<'DEVELOPER' | 'DEVOPS' | 'ADMIN'>('DEVELOPER');
+  const [newRepoIds, setNewRepoIds] = useState<string[]>([]);
 
   const { data } = useQuery({ queryKey: ['users'], queryFn: async () => (await api.get('/users')).data });
   const reposQuery = useQuery({ queryKey: ['repos'], queryFn: async () => (await api.get('/repositories')).data });
@@ -30,9 +35,28 @@ export function UsersPage() {
     mutationFn: async () =>
       api.put(`/users/${selectedUserId}`, {
         role: selectedRole,
-        repositoryIds: selectedRepoIds
+        repositoryIds: selectedRepoIds,
+        password: selectedPassword || undefined
       }),
     onSuccess: async () => {
+      setSelectedPassword('');
+      await queryClient.invalidateQueries({ queryKey: ['users'] });
+    }
+  });
+
+  const createUserMutation = useMutation({
+    mutationFn: async () =>
+      api.post('/users', {
+        username: newUsername,
+        password: newPassword,
+        role: newRole,
+        repositoryIds: newRepoIds
+      }),
+    onSuccess: async () => {
+      setNewUsername('');
+      setNewPassword('');
+      setNewRole('DEVELOPER');
+      setNewRepoIds([]);
       await queryClient.invalidateQueries({ queryKey: ['users'] });
     }
   });
@@ -52,6 +76,63 @@ export function UsersPage() {
           <strong className="text-[hsl(var(--text-primary))]"> DevOps</strong> sees all repositories and can sync/export, and
           <strong className="text-[hsl(var(--text-primary))]"> Admin</strong> manages users and all resources.
         </p>
+        <div className="grid gap-3 lg:grid-cols-4">
+          <FormField label="New user">
+            <input className="field" value={newUsername} onChange={(e) => setNewUsername(e.target.value)} placeholder="username" />
+          </FormField>
+          <FormField label="Password">
+            <input
+              className="field"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="set a password"
+            />
+          </FormField>
+          <FormField label="Role">
+            <select className="field" value={newRole} onChange={(e) => setNewRole(e.target.value as UserRow['role'])}>
+              <option value="DEVELOPER">Developer</option>
+              <option value="DEVOPS">DevOps</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+          </FormField>
+          <FormField label="Set new password (optional)">
+            <input
+              className="field"
+              type="password"
+              value={selectedPassword}
+              onChange={(e) => setSelectedPassword(e.target.value)}
+              placeholder="leave blank to keep current"
+            />
+          </FormField>
+          <FormField label="Repositories (optional)">
+            <select
+              multiple
+              className="field min-h-[110px]"
+              value={newRepoIds}
+              onChange={(e) => {
+                const values = Array.from(e.target.selectedOptions).map((o) => o.value);
+                setNewRepoIds(values);
+              }}
+            >
+              {repos.map((repo) => (
+                <option key={repo.id} value={repo.id}>
+                  {repo.fullName}
+                </option>
+              ))}
+            </select>
+          </FormField>
+          <div className="flex items-end">
+            <button
+              className="btn btn-primary w-full"
+              disabled={!newUsername || !newPassword}
+              onClick={() => createUserMutation.mutate()}
+            >
+              {createUserMutation.isPending ? 'Creating...' : 'Create user'}
+            </button>
+          </div>
+        </div>
+
         <div className="grid gap-3 lg:grid-cols-4">
           <FormField label="User">
             <select
