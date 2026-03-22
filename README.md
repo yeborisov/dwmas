@@ -26,22 +26,39 @@ Key highlights:
 ```text
 dwmas/
   apps/
-    api/                # Express + TypeScript backend
-    web/                # React + Vite + TypeScript frontend
+    api/                # Express + TypeScript backend (REST, RBAC, Prisma, realtime)
+    web/                # React + Vite + TypeScript SPA dashboard
+    github-gateway/     # Express reverse proxy: token pool, Redis cache, GitHub API proxy
+    worker/             # BullMQ background job worker (repo sync, analytics)
   packages/
-    shared/             # shared constants/types
+    shared/             # Shared constants, types, and utilities
+    github-contracts/   # Typed contracts for GitHub Gateway ↔ API communication
   prisma/
-    schema.prisma
+    schema.prisma       # Canonical Prisma schema (source of truth)
+    README.md           # Schema docs, ERD, migration workflow
   docs/
-    architecture.md
-    oauth-sequence.md
-    workflow-sync-sequence.md
+    architecture.md           # System architecture + Mermaid diagrams
+    oauth-sequence.md         # GitHub OAuth login sequence
+    workflow-sync-sequence.md # Workflow sync sequence
   docker-compose.yml
   pnpm-workspace.yaml
   .env.example
   LICENSE
   README.md
 ```
+
+### Service READMEs
+
+| Service / Package         | README                                                                    |
+|---------------------------|---------------------------------------------------------------------------|
+| API (backend)             | `apps/api/` — see root README sections below                             |
+| Web (frontend SPA)        | [`apps/web/README.md`](apps/web/README.md)                               |
+| GitHub Gateway            | [`apps/github-gateway/README.md`](apps/github-gateway/README.md)         |
+| Worker                    | [`apps/worker/README.md`](apps/worker/README.md)                         |
+| Prisma schema             | [`prisma/README.md`](prisma/README.md)                                   |
+| Architecture & diagrams   | [`docs/architecture.md`](docs/architecture.md)                           |
+| OAuth sequence            | [`docs/oauth-sequence.md`](docs/oauth-sequence.md)                       |
+| Workflow sync sequence    | [`docs/workflow-sync-sequence.md`](docs/workflow-sync-sequence.md)       |
 
 ## Tech Stack
 
