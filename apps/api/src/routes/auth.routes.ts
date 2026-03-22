@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import bcrypt from 'bcryptjs';
 import { passport } from '../config/passport.js';
 import { setAuthCookie, signAuthToken } from '../lib/auth.js';
 import { requireAuth } from '../middleware/auth.js';
@@ -24,6 +25,21 @@ authRouter.get('/github/callback', passport.authenticate('github', { session: fa
 authRouter.post('/logout', (_req, res) => {
   res.clearCookie('dwmas_token');
   res.json({ success: true });
+});
+
+authRouter.post('/login', async (req, res) => {
+  const { username, password } = req.body as { username?: string; password?: string };
+  if (!username || !password) return res.status(400).json({ success: false, message: 'Username and password are required' });
+
+  const user = await prisma.user.findUnique({ where: { username }, select: { id: true, username: true, role: true, githubId: true, passwordHash: true } });
+  if (!user || !user.passwordHash) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+
+  const valid = await bcrypt.compare(password, user.passwordHash);
+  if (!valid) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+
+  const token = signAuthToken({ id: user.id, role: user.role, githubId: user.githubId, username: user.username });
+  setAuthCookie(res, token);
+  return res.json({ success: true, data: { id: user.id, username: user.username, role: user.role } });
 });
 
 authRouter.get('/me', requireAuth, async (req, res) => {

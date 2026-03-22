@@ -5,7 +5,7 @@ import { env } from '../config/env.js';
 export interface AuthPayload {
   id: string;
   role: 'DEVELOPER' | 'DEVOPS' | 'ADMIN';
-  githubId: string;
+  githubId?: string | null;
   username: string;
 }
 

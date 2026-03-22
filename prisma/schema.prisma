@@ -33,10 +33,11 @@ enum SyncStatus {
 model User {
   id          String   @id @default(cuid())
   githubId    String   @unique
-  username    String
+  username    String   @unique
   displayName String?
   email       String?
   avatarUrl   String?
+  passwordHash String?
   role        Role     @default(DEVELOPER)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())

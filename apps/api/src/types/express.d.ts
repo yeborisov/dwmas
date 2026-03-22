@@ -5,7 +5,7 @@ declare global {
     interface User {
       id: string;
       role: Role;
-      githubId: string;
+      githubId?: string | null;
       username: string;
     }
 

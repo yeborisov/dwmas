@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -12,6 +13,27 @@ async function main() {
       displayName: 'Yordan B.',
       email: 'yordan@example.com',
       role: 'ADMIN'
+    }
+  });
+
+  // Test credential user (local login)
+  const testerPassword = await bcrypt.hash('Password123!', 10);
+  await prisma.user.upsert({
+    where: { githubId: 'local_tester' },
+    update: {
+      username: 'tester',
+      displayName: 'Test User',
+      email: 'tester@example.com',
+      role: 'DEVELOPER',
+      passwordHash: testerPassword
+    },
+    create: {
+      githubId: 'local_tester',
+      username: 'tester',
+      displayName: 'Test User',
+      email: 'tester@example.com',
+      role: 'DEVELOPER',
+      passwordHash: testerPassword
     }
   });
 
