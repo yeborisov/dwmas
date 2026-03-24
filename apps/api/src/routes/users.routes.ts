@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import crypto from 'crypto';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { prisma } from '../config/prisma.js';
@@ -44,7 +45,8 @@ usersRouter.post('/', async (req, res) => {
         data: repositoryIds.map((repositoryId) => ({ userId: user.id, repositoryId }))
       });
     }
-  const { passwordHash: _omitted, ...safeUser } = user;
+  const { passwordHash: _passwordHash, ...safeUser } = user;
+  void _passwordHash;
   res.status(201).json({ success: true, data: safeUser });
   } catch (error: any) {
     if (error?.code === 'P2002') {
@@ -109,4 +111,23 @@ usersRouter.put('/:userId', async (req, res) => {
 usersRouter.delete('/:userId', async (req, res) => {
   await prisma.user.update({ where: { id: req.params.userId }, data: { isActive: false } });
   res.json({ success: true });
+});
+
+usersRouter.delete('/:userId/hard', async (req, res) => {
+  const userId = req.params.userId;
+  await prisma.userRepositoryAssignment.deleteMany({ where: { userId } });
+  await prisma.user.delete({ where: { id: userId } });
+  res.json({ success: true });
+});
+
+usersRouter.post('/:userId/reset-password', async (req, res) => {
+  const tempPassword = crypto.randomBytes(9).toString('base64url');
+  const passwordHash = await bcrypt.hash(tempPassword, 10);
+
+  const user = await prisma.user.update({
+    where: { id: req.params.userId },
+    data: { passwordHash }
+  });
+
+  res.json({ success: true, data: { id: user.id, username: user.username, tempPassword } });
 });

@@ -34,7 +34,17 @@ export function DataTable({ columns, children, className, caption }: DataTablePr
   );
 }
 
-export function DataTableRow({ children, className, highlight }: { children: ReactNode; className?: string; highlight?: boolean }) {
+export function DataTableRow({
+  children,
+  className,
+  highlight,
+  onClick
+}: {
+  children: ReactNode;
+  className?: string;
+  highlight?: boolean;
+  onClick?: () => void;
+}) {
   return (
     <tr
       className={cn(
@@ -42,6 +52,7 @@ export function DataTableRow({ children, className, highlight }: { children: Rea
         highlight && 'bg-cyan-500/5',
         className
       )}
+      onClick={onClick}
     >
       {children}
     </tr>

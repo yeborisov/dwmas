@@ -89,14 +89,6 @@ function writeCache<T>(key: string, value: T, etag?: string, lastModified?: stri
   return value;
 }
 
-function getCacheHeaders(key: string): Record<string, string> {
-  const entry = cache.get(key);
-  const headers: Record<string, string> = {};
-  if (entry?.etag) headers['if-none-match'] = entry.etag;
-  if (entry?.lastModified) headers['if-modified-since'] = entry.lastModified;
-  return headers;
-}
-
 /** Flush all cached entries (useful after sync operations) */
 export function clearGithubCache(): void {
   cache.clear();
@@ -363,28 +355,6 @@ async function fetchRunsViaREST(owner: string, repo: string): Promise<GithubWork
 /* ------------------------------------------------------------------ */
 /*  Batch jobs fetching via GraphQL                                    */
 /* ------------------------------------------------------------------ */
-
-const WORKFLOW_JOBS_QUERY = `
-  query ($owner: String!, $name: String!, $runDatabaseId: Int!) {
-    repository(owner: $owner, name: $name) {
-      workflowRun(databaseId: $runDatabaseId) {
-        jobs(first: 100) {
-          nodes {
-            databaseId
-            name
-            status
-            conclusion
-            startedAt
-            completedAt
-            runner { name }
-            url
-          }
-        }
-      }
-    }
-    rateLimit { remaining resetAt }
-  }
-`;
 
 interface GraphQLJobNode {
   databaseId: number;

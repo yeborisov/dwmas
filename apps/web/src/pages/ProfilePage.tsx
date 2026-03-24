@@ -1,13 +1,37 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { PageHeader } from '../components/ui/PageHeader';
 import { SectionCard } from '../components/ui/SectionCard';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { EmptyState } from '../components/ui/EmptyState';
+import { FormField } from '../components/ui/FormField';
+import { useState } from 'react';
 
 export function ProfilePage() {
   const { data } = useQuery({ queryKey: ['me'], queryFn: async () => (await api.get('/me')).data });
   const me = data?.data;
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
+
+  const changePasswordMutation = useMutation({
+    mutationFn: async () =>
+      api.post('/auth/change-password', {
+        currentPassword: currentPassword || undefined,
+        newPassword
+      }),
+    onSuccess: () => {
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordMessage('Password updated successfully.');
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || 'Failed to update password.';
+      setPasswordMessage(message);
+    }
+  });
 
   if (!me) {
     return <EmptyState title="Profile unavailable" description="Could not load authenticated account metadata." icon="👤" />;
@@ -60,6 +84,65 @@ export function ProfilePage() {
             Current role: <code className="rounded bg-[hsl(var(--bg))] px-1 py-0.5 text-[hsl(var(--text-primary))]">{me.role || 'unknown'}</code>
           </p>
         </div>
+      </SectionCard>
+
+      <SectionCard title="Change password" description="Update your local login password.">
+        <div className="grid gap-3 md:grid-cols-2">
+          <FormField label="Current password">
+            <input
+              className="field"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="required if password exists"
+            />
+          </FormField>
+          <FormField label="New password">
+            <input
+              className="field"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="min 8 characters"
+            />
+          </FormField>
+          <FormField label="Confirm new password" className="md:col-span-2">
+            <input
+              className="field"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="re-type new password"
+            />
+          </FormField>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <button
+            className="btn btn-primary"
+            disabled={!newPassword || newPassword !== confirmPassword || changePasswordMutation.isPending}
+            onClick={() => changePasswordMutation.mutate()}
+          >
+            {changePasswordMutation.isPending ? 'Updating...' : 'Update password'}
+          </button>
+          <button
+            className="btn btn-secondary"
+            disabled={changePasswordMutation.isPending}
+            onClick={() => {
+              setCurrentPassword('');
+              setNewPassword('');
+              setConfirmPassword('');
+              setPasswordMessage(null);
+            }}
+          >
+            Clear
+          </button>
+          {passwordMessage ? (
+            <span className="text-xs text-[hsl(var(--text-muted))]">{passwordMessage}</span>
+          ) : null}
+        </div>
+        <p className="mt-2 text-xs text-[hsl(var(--text-muted))]">
+          If you signed in with GitHub and have no password yet, you can set one here without entering a current password.
+        </p>
       </SectionCard>
 
       <SectionCard title="GitHub API — GraphQL optimization" description="How the system uses GraphQL to avoid rate limits.">

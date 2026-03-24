@@ -34,6 +34,16 @@ function resolveDateRange(preset?: string, from?: string, to?: string) {
   return { from: undefined, to: undefined };
 }
 
+async function getAccessibleRepoIds(user: { id: string; role: string }) {
+  const repos = await prisma.repository.findMany({
+    where: {
+      OR: [{ createdByUserId: user.id }, { assignments: { some: { userId: user.id } } }]
+    },
+    select: { id: true }
+  });
+  return repos.map((repo) => repo.id);
+}
+
 export const reportsRouter = Router();
 reportsRouter.use(requireAuth);
 
@@ -45,7 +55,7 @@ reportsRouter.get('/templates', async (req, res) => {
   res.json({ success: true, data: templates });
 });
 
-reportsRouter.post('/templates', requireRoles('DEVOPS', 'ADMIN'), async (req, res) => {
+reportsRouter.post('/templates', requireRoles('DEVELOPER', 'DEVOPS', 'ADMIN'), async (req, res) => {
   const parsed = templateSchema.parse(req.body);
   const template = await prisma.reportTemplate.create({
     data: {
@@ -59,7 +69,7 @@ reportsRouter.post('/templates', requireRoles('DEVOPS', 'ADMIN'), async (req, re
   res.status(201).json({ success: true, data: template });
 });
 
-reportsRouter.put('/templates/:templateId', requireRoles('DEVOPS', 'ADMIN'), async (req, res) => {
+reportsRouter.put('/templates/:templateId', requireRoles('DEVELOPER', 'DEVOPS', 'ADMIN'), async (req, res) => {
   const templateId = String(req.params.templateId);
   const parsed = templateSchema.partial().parse(req.body);
   const existing = await prisma.reportTemplate.findUnique({ where: { id: templateId } });
@@ -82,7 +92,7 @@ reportsRouter.put('/templates/:templateId', requireRoles('DEVOPS', 'ADMIN'), asy
   return res.json({ success: true, data: updated });
 });
 
-reportsRouter.delete('/templates/:templateId', requireRoles('DEVOPS', 'ADMIN'), async (req, res) => {
+reportsRouter.delete('/templates/:templateId', requireRoles('DEVELOPER', 'DEVOPS', 'ADMIN'), async (req, res) => {
   const templateId = String(req.params.templateId);
   const existing = await prisma.reportTemplate.findUnique({ where: { id: templateId } });
   if (!existing) return res.status(404).json({ success: false, message: 'Template not found' });
@@ -101,6 +111,12 @@ reportsRouter.post('/templates/:templateId/apply', async (req, res) => {
 
   const config = (template.configJson ?? {}) as Record<string, unknown>;
   const repositoryIds = Array.isArray(config.repositoryIds) ? (config.repositoryIds as string[]) : undefined;
+  const allowedRepoIds = await getAccessibleRepoIds(req.user!);
+  const filteredRepoIds = allowedRepoIds
+    ? repositoryIds?.length
+      ? repositoryIds.filter((id) => allowedRepoIds.includes(id))
+      : allowedRepoIds
+    : repositoryIds;
   const status = typeof config.status === 'string' ? config.status : undefined;
   const conclusion = typeof config.conclusion === 'string' ? config.conclusion : undefined;
   const branch = typeof config.branch === 'string' ? config.branch : undefined;
@@ -113,7 +129,7 @@ reportsRouter.post('/templates/:templateId/apply', async (req, res) => {
 
   const rows = await prisma.workflowRun.findMany({
     where: {
-      repositoryId: repositoryIds?.length ? { in: repositoryIds } : undefined,
+      repositoryId: filteredRepoIds?.length ? { in: filteredRepoIds } : filteredRepoIds ? { in: filteredRepoIds } : undefined,
       status,
       conclusion,
       branch,
@@ -138,14 +154,20 @@ reportsRouter.post('/templates/:templateId/apply', async (req, res) => {
   return res.json({ success: true, data: response });
 });
 
-reportsRouter.get('/templates/:templateId/export.csv', requireRoles('DEVOPS', 'ADMIN'), async (req, res) => {
+reportsRouter.get('/templates/:templateId/export.csv', requireRoles('DEVELOPER', 'DEVOPS', 'ADMIN'), async (req, res) => {
   const template = await prisma.reportTemplate.findUnique({ where: { id: String(req.params.templateId) } });
   if (!template) return res.status(404).json({ success: false, message: 'Template not found' });
 
   const config = (template.configJson ?? {}) as Record<string, unknown>;
   const repositoryIds = Array.isArray(config.repositoryIds) ? (config.repositoryIds as string[]) : undefined;
+  const allowedRepoIds = await getAccessibleRepoIds(req.user!);
+  const filteredRepoIds = allowedRepoIds
+    ? repositoryIds?.length
+      ? repositoryIds.filter((id) => allowedRepoIds.includes(id))
+      : allowedRepoIds
+    : repositoryIds;
   const rows = await prisma.workflowRun.findMany({
-    where: { repositoryId: repositoryIds?.length ? { in: repositoryIds } : undefined },
+    where: { repositoryId: filteredRepoIds?.length ? { in: filteredRepoIds } : filteredRepoIds ? { in: filteredRepoIds } : undefined },
     include: { repository: true },
     orderBy: { startedAt: 'desc' },
     take: 1000

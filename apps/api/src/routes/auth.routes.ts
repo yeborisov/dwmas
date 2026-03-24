@@ -42,6 +42,32 @@ authRouter.post('/login', async (req, res) => {
   return res.json({ success: true, data: { id: user.id, username: user.username, role: user.role } });
 });
 
+authRouter.post('/change-password', requireAuth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body as { currentPassword?: string; newPassword?: string };
+  if (!newPassword || newPassword.length < 8) {
+    return res.status(400).json({ success: false, message: 'New password must be at least 8 characters' });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: req.user?.id },
+    select: { id: true, passwordHash: true }
+  });
+
+  if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+  if (user.passwordHash) {
+    if (!currentPassword) {
+      return res.status(400).json({ success: false, message: 'Current password is required' });
+    }
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+  }
+
+  const nextHash = await bcrypt.hash(newPassword, 10);
+  await prisma.user.update({ where: { id: user.id }, data: { passwordHash: nextHash } });
+  return res.json({ success: true });
+});
+
 authRouter.get('/me', requireAuth, async (req, res) => {
   const user = req.user as { id: string; githubId?: string; username?: string; role: string };
 

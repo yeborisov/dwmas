@@ -83,11 +83,14 @@ export function ReportsPage() {
   const [description, setDescription] = useState('');
   const [type, setType] = useState('OPERATIONS');
   const [dateRangePreset, setDateRangePreset] = useState<'7d' | '30d' | '90d' | 'custom'>('30d');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
   const [status, setStatus] = useState('completed');
   const [conclusion, setConclusion] = useState('failure');
   const [branch, setBranch] = useState('');
   const [actor, setActor] = useState('');
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const templatesQuery = useQuery({ queryKey: ['report-templates'], queryFn: async () => (await api.get('/reports/templates')).data });
   const templates: ReportTemplate[] = templatesQuery.data?.data ?? [];
@@ -100,6 +103,11 @@ export function ReportsPage() {
       setShowCreateForm(false);
       setName('');
       setDescription('');
+      setCreateError(null);
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || 'Unable to create report template.';
+      setCreateError(message);
     }
   });
 
@@ -107,10 +115,19 @@ export function ReportsPage() {
     mutationFn: async (templateId: string) => (await api.post(`/reports/templates/${templateId}/apply`)).data
   });
 
+  const deleteTemplateMutation = useMutation({
+    mutationFn: async (templateId: string) => api.delete(`/reports/templates/${templateId}`),
+    onSuccess: () => {
+      templatesQuery.refetch();
+      if (selectedTemplateId) setSelectedTemplateId('');
+    }
+  });
+
   const selectedTemplate = useMemo(() => templates.find((t) => t.id === selectedTemplateId), [templates, selectedTemplateId]);
   const appliedResult: AppliedReportResult | undefined = applyTemplateMutation.data?.data;
 
   function handleCreateFromPreset(preset: typeof PRESETS[number]) {
+    setCreateError(null);
     createTemplateMutation.mutate({
       name: preset.name,
       description: preset.description,
@@ -120,12 +137,15 @@ export function ReportsPage() {
   }
 
   function handleCreateCustom() {
+    setCreateError(null);
     createTemplateMutation.mutate({
       name,
       description,
       type,
       configJson: {
         dateRangePreset,
+        from: dateRangePreset === 'custom' && customFrom ? customFrom : undefined,
+        to: dateRangePreset === 'custom' && customTo ? customTo : undefined,
         status: status || undefined,
         conclusion: conclusion || undefined,
         branch: branch || undefined,
@@ -177,6 +197,9 @@ export function ReportsPage() {
             </button>
           ))}
         </div>
+        {createError ? (
+          <p className="mt-3 text-xs text-rose-200">{createError}</p>
+        ) : null}
       </SectionCard>
 
       {/* ── Custom template form ── */}
@@ -206,6 +229,26 @@ export function ReportsPage() {
                 <option value="custom">Custom</option>
               </select>
             </FormField>
+            {dateRangePreset === 'custom' ? (
+              <>
+                <FormField label="From">
+                  <input
+                    className="field"
+                    type="date"
+                    value={customFrom}
+                    onChange={(e) => setCustomFrom(e.target.value)}
+                  />
+                </FormField>
+                <FormField label="To">
+                  <input
+                    className="field"
+                    type="date"
+                    value={customTo}
+                    onChange={(e) => setCustomTo(e.target.value)}
+                  />
+                </FormField>
+              </>
+            ) : null}
             <FormField label="Status filter">
               <select className="field" value={status} onChange={(e) => setStatus(e.target.value)}>
                 <option value="">Any</option>
@@ -236,6 +279,9 @@ export function ReportsPage() {
               {createTemplateMutation.isPending ? 'Saving…' : 'Save template'}
             </button>
           </div>
+          {createError ? (
+            <p className="mt-2 text-xs text-rose-200">{createError}</p>
+          ) : null}
         </SectionCard>
       ) : null}
 
@@ -293,6 +339,17 @@ export function ReportsPage() {
                     >
                       ⬇ CSV
                     </a>
+                    <button
+                      className="btn btn-danger flex-1 text-xs"
+                      onClick={() => {
+                        if (window.confirm(`Delete template "${template.name}"?`)) {
+                          deleteTemplateMutation.mutate(template.id);
+                        }
+                      }}
+                      disabled={deleteTemplateMutation.isPending}
+                    >
+                      {deleteTemplateMutation.isPending ? 'Deleting…' : 'Delete'}
+                    </button>
                   </div>
                 </div>
               );

@@ -25,14 +25,6 @@ workflowsRouter.get('/', async (req, res) => {
         ).map((repo: { id: string }) => repo.id)
       : undefined;
 
-  const accessibleRepoIds = allowedRepoIds
-    ? allowedRepoIds
-    : (
-        await prisma.repository.findMany({
-          select: { id: true }
-        })
-      ).map((repo: { id: string }) => repo.id);
-
   if (refresh && requestedRepoId) {
     await syncRepositoryRuns(requestedRepoId).catch(() => undefined);
   }
