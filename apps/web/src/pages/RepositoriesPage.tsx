@@ -31,6 +31,7 @@ export function RepositoriesPage() {
   const [owner, setOwner] = useState('');
   const [name, setName] = useState('');
   const [repositoryUrl, setRepositoryUrl] = useState('');
+  const [syncingRepoId, setSyncingRepoId] = useState<string | null>(null);
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['repos'],
@@ -55,11 +56,17 @@ export function RepositoriesPage() {
 
   const syncMutation = useMutation({
     mutationFn: async (repoId: string) => api.post(`/repositories/${repoId}/sync`),
+    onMutate: (repoId: string) => {
+      setSyncingRepoId(repoId);
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['repos'] });
       await queryClient.invalidateQueries({ queryKey: ['workflows'] });
       await queryClient.invalidateQueries({ queryKey: ['analytics-summary'] });
       await queryClient.invalidateQueries({ queryKey: ['analytics-failure-rate'] });
+    },
+    onSettled: () => {
+      setSyncingRepoId(null);
     }
   });
 
@@ -173,8 +180,12 @@ export function RepositoriesPage() {
                   <Link className="btn btn-secondary" to="/workflows">
                     View runs
                   </Link>
-                  <button className="btn" onClick={() => syncMutation.mutate(repo.id)} disabled={syncMutation.isPending}>
-                    {syncMutation.isPending ? 'Syncing runs...' : 'Sync runs'}
+                  <button
+                    className="btn"
+                    onClick={() => syncMutation.mutate(repo.id)}
+                    disabled={syncMutation.isPending && syncingRepoId === repo.id}
+                  >
+                    {syncMutation.isPending && syncingRepoId === repo.id ? 'Syncing runs...' : 'Sync runs'}
                   </button>
                 </div>
               </DataTableCell>
