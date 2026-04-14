@@ -1,3 +1,4 @@
+/* global window */
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';

@@ -1,3 +1,4 @@
+/* global window, document */
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';

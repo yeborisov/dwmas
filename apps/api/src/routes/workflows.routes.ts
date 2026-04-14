@@ -169,9 +169,12 @@ workflowsRouter.post('/:workflowId/issues', async (req, res) => {
 
         const updated = await prisma.issue.update({
           where: { id: existing.id },
-          data: {
-            description: `${existing.description}\n\nGitHub issue: ${ghIssue.data.html_url}`
-          },
+          data: ({
+            description: `${existing.description}\n\nGitHub issue: ${ghIssue.data.html_url}`,
+            githubIssueNumber: ghIssue.data.number,
+            githubIssueUrl: ghIssue.data.html_url,
+            githubIssueState: ghIssue.data.state
+          } as any),
           include: {
             author: { select: { id: true, username: true, displayName: true } },
             comments: true
@@ -195,12 +198,15 @@ workflowsRouter.post('/:workflowId/issues', async (req, res) => {
     const description = `${buildIssueBody()}\n\nGitHub issue: ${ghIssue.data.html_url}`;
 
     const issue = await prisma.issue.create({
-      data: {
+      data: ({
         repositoryId: run.repositoryId,
         authorId: req.user!.id,
         title,
-        description
-      },
+        description,
+        githubIssueNumber: ghIssue.data.number,
+        githubIssueUrl: ghIssue.data.html_url,
+        githubIssueState: ghIssue.data.state
+      } as any),
       include: {
         author: { select: { id: true, username: true, displayName: true } },
         comments: true

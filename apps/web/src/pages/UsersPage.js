@@ -1,3 +1,4 @@
+/* global window */
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';

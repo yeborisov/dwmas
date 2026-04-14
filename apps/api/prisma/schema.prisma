@@ -138,6 +138,9 @@ model Issue {
   title        String
   description  String
   status       IssueStatus @default(OPEN)
+  githubIssueNumber Int?
+  githubIssueUrl String?
+  githubIssueState String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -151,6 +154,7 @@ model Comment {
   issueId    String
   authorId   String
   content    String
+  githubCommentId String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 

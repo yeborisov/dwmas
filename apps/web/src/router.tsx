@@ -16,6 +16,7 @@ import { RepositoriesPage } from './pages/RepositoriesPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { UsersPage } from './pages/UsersPage';
 import { IssueDetailsPage } from './pages/IssueDetailsPage';
+import { MyIssuesPage } from './pages/MyIssuesPage';
 import { ReportsPage } from './pages/ReportsPage';
 
 function AuthRedirect({ children }: { children: JSX.Element }) {
@@ -118,6 +119,14 @@ export function AppRouter() {
           element={
             <ProtectedRoute>
               <IssueDetailsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/issues"
+          element={
+            <ProtectedRoute>
+              <MyIssuesPage />
             </ProtectedRoute>
           }
         />

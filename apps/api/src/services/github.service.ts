@@ -568,6 +568,45 @@ export const githubService = {
   },
 
   /**
+   * Get a GitHub issue by number.
+   */
+  getIssue: async (owner: string, repo: string, issueNumber: number) => {
+    try {
+      return await withRetry(() =>
+        octokit.issues.get({ owner, repo, issue_number: issueNumber })
+      );
+    } catch (error) {
+      throw toFriendlyGithubError(error);
+    }
+  },
+
+  /**
+   * List comments for a GitHub issue.
+   */
+  listIssueComments: async (owner: string, repo: string, issueNumber: number) => {
+    try {
+      return await withRetry(() =>
+        octokit.issues.listComments({ owner, repo, issue_number: issueNumber, per_page: 100 })
+      );
+    } catch (error) {
+      throw toFriendlyGithubError(error);
+    }
+  },
+
+  /**
+   * Create a comment on a GitHub issue.
+   */
+  createIssueComment: async (owner: string, repo: string, issueNumber: number, body: string) => {
+    try {
+      return await withRetry(() =>
+        octokit.issues.createComment({ owner, repo, issue_number: issueNumber, body })
+      );
+    } catch (error) {
+      throw toFriendlyGithubError(error);
+    }
+  },
+
+  /**
    * Get current rate limit status for monitoring.
    */
   getRateLimit: async () => {

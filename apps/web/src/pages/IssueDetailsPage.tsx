@@ -21,6 +21,8 @@ interface IssueRow {
   title: string;
   status: 'OPEN' | 'CLOSED';
   createdAt?: string;
+  githubIssueUrl?: string | null;
+  githubIssueState?: string | null;
   author?: {
     username?: string;
     displayName?: string;
@@ -61,6 +63,16 @@ export function IssueDetailsPage() {
         title={data?.data?.title || 'Issue Details'}
         description={`Status: ${data?.data?.status || 'OPEN'} • Created: ${data?.data?.createdAt ? new Date(data.data.createdAt).toLocaleString() : '-'}${data?.data?.author ? ` • Author: ${data.data.author.displayName || data.data.author.username}` : ''}`}
       />
+      {data?.data?.githubIssueUrl ? (
+        <div className="flex flex-wrap gap-2">
+          <a className="btn btn-secondary" href={data.data.githubIssueUrl} target="_blank" rel="noreferrer">
+            Open in GitHub
+          </a>
+          {data.data.githubIssueState ? (
+            <span className="text-xs text-[hsl(var(--text-muted))]">GitHub state: {data.data.githubIssueState}</span>
+          ) : null}
+        </div>
+      ) : null}
 
       <SectionCard title="Discussion" description="Collaborative comment thread for this issue">
         {!comments.length ? (
