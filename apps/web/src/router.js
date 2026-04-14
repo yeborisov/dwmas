@@ -18,6 +18,15 @@ import { ProfilePage } from './pages/ProfilePage';
 import { UsersPage } from './pages/UsersPage';
 import { IssueDetailsPage } from './pages/IssueDetailsPage';
 import { ReportsPage } from './pages/ReportsPage';
+function AuthRedirect({ children }) {
+    const user = useAuthStore((s) => s.user);
+    const isBootstrapping = useAuthStore((s) => s.isBootstrapping);
+    if (isBootstrapping)
+        return children;
+    if (user)
+        return _jsx(Navigate, { to: "/dashboard", replace: true });
+    return children;
+}
 export function AppRouter() {
     const setUser = useAuthStore((s) => s.setUser);
     const setBootstrapping = useAuthStore((s) => s.setBootstrapping);
@@ -46,5 +55,5 @@ export function AppRouter() {
             setBootstrapping(false);
         }
     }, [meQuery.data, meQuery.isError, meQuery.isSuccess, setBootstrapping, setUser]);
-    return (_jsxs(Routes, { children: [_jsxs(Route, { element: _jsx(Layout, {}), children: [_jsx(Route, { path: "/", element: _jsx(HomePage, {}) }), _jsx(Route, { path: "/about", element: _jsx(AboutPage, {}) }), _jsx(Route, { path: "/login", element: _jsx(LoginPage, {}) }), _jsx(Route, { path: "/dashboard", element: _jsx(ProtectedRoute, { children: _jsx(DashboardPage, {}) }) }), _jsx(Route, { path: "/workflows", element: _jsx(ProtectedRoute, { children: _jsx(WorkflowsPage, {}) }) }), _jsx(Route, { path: "/workflows/:id", element: _jsx(ProtectedRoute, { children: _jsx(WorkflowDetailsPage, {}) }) }), _jsx(Route, { path: "/analytics", element: _jsx(ProtectedRoute, { children: _jsx(AnalyticsPage, {}) }) }), _jsx(Route, { path: "/repositories", element: _jsx(ProtectedRoute, { children: _jsx(RepositoriesPage, {}) }) }), _jsx(Route, { path: "/repository/issues/:id", element: _jsx(ProtectedRoute, { children: _jsx(IssueDetailsPage, {}) }) }), _jsx(Route, { path: "/repository/issues/:issueId/comments/:commentId", element: _jsx(ProtectedRoute, { children: _jsx(IssueDetailsPage, {}) }) }), _jsx(Route, { path: "/profile", element: _jsx(ProtectedRoute, { children: _jsx(ProfilePage, {}) }) }), _jsx(Route, { path: "/reports", element: _jsx(ProtectedRoute, { children: _jsx(ReportsPage, {}) }) }), _jsx(Route, { path: "/users", element: _jsx(ProtectedRoute, { roles: ['ADMIN'], children: _jsx(UsersPage, {}) }) })] }), _jsx(Route, { path: "*", element: _jsx(Navigate, { to: "/", replace: true }) })] }));
+    return (_jsxs(Routes, { children: [_jsxs(Route, { element: _jsx(Layout, {}), children: [_jsx(Route, { path: "/", element: _jsx(AuthRedirect, { children: _jsx(HomePage, {}) }) }), _jsx(Route, { path: "/about", element: _jsx(AboutPage, {}) }), _jsx(Route, { path: "/login", element: _jsx(AuthRedirect, { children: _jsx(LoginPage, {}) }) }), _jsx(Route, { path: "/dashboard", element: _jsx(ProtectedRoute, { children: _jsx(DashboardPage, {}) }) }), _jsx(Route, { path: "/workflows", element: _jsx(ProtectedRoute, { children: _jsx(WorkflowsPage, {}) }) }), _jsx(Route, { path: "/workflows/:id", element: _jsx(ProtectedRoute, { children: _jsx(WorkflowDetailsPage, {}) }) }), _jsx(Route, { path: "/analytics", element: _jsx(ProtectedRoute, { children: _jsx(AnalyticsPage, {}) }) }), _jsx(Route, { path: "/repositories", element: _jsx(ProtectedRoute, { children: _jsx(RepositoriesPage, {}) }) }), _jsx(Route, { path: "/repository/issues/:id", element: _jsx(ProtectedRoute, { children: _jsx(IssueDetailsPage, {}) }) }), _jsx(Route, { path: "/repository/issues/:issueId/comments/:commentId", element: _jsx(ProtectedRoute, { children: _jsx(IssueDetailsPage, {}) }) }), _jsx(Route, { path: "/profile", element: _jsx(ProtectedRoute, { children: _jsx(ProfilePage, {}) }) }), _jsx(Route, { path: "/reports", element: _jsx(ProtectedRoute, { children: _jsx(ReportsPage, {}) }) }), _jsx(Route, { path: "/users", element: _jsx(ProtectedRoute, { roles: ['ADMIN'], children: _jsx(UsersPage, {}) }) })] }), _jsx(Route, { path: "*", element: _jsx(Navigate, { to: "/", replace: true }) })] }));
 }
