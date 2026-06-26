@@ -11,7 +11,7 @@ Full stack Application Development with Node.js + Express.js + React.js - 2026
 
 ## Project name
 
-    **DevOps Workflow Monitoring & Analytics System (DWMAS)**
+**DevOps Workflow Monitoring & Analytics System (DWMAS)**
 
 ## 1. Short project description (Business needs and system features)
 
