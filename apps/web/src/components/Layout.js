@@ -10,6 +10,7 @@ export function Layout() {
     const navItems = [
         { to: '/dashboard', label: 'Dashboard' },
         { to: '/workflows', label: 'Workflows' },
+        { to: '/issues', label: 'My Issues' },
         { to: '/analytics', label: 'Analytics' },
         { to: '/repositories', label: 'Repositories' },
         { to: '/reports', label: 'Reports' },
