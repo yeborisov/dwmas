@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="bg">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DWMAS – Курсов проект</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+  <style>
+    .reveal h1 { font-size: 1.8em; }
+    .reveal h2 { font-size: 1.4em; color: #58a6ff; }
+    .reveal table { font-size: 0.7em; }
+    .reveal pre code { font-size: 0.75em; line-height: 1.4; }
+    .reveal p, .reveal li { font-size: 0.85em; }
+    .reveal a { color: #58a6ff; }
+    .reveal strong { color: #f0883e; }
+    .footer {
+      position: fixed;
+      bottom: 10px;
+      right: 14px;
+      font-size: 0.45em;
+      opacity: 0.5;
+      color: #aaa;
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section
+        data-markdown="prezentacia.md"
+        data-separator="^---$"
+        data-separator-vertical="^--$"
+        data-separator-notes="^Note:"
+        data-charset="utf-8">
+      </section>
+    </div>
+  </div>
+
+  <div class="footer">
+    <a href="https://github.com/yeborisov/dwmas" target="_blank" rel="noopener">github.com/yeborisov/dwmas</a>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/markdown/markdown.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: 'c/t',
+      transition: 'slide',
+      backgroundTransition: 'fade',
+      plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+    });
+  </script>
+</body>
+</html>

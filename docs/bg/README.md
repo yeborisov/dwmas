@@ -1,5 +1,7 @@
 # DWMAS – Документация на български
 
+**GitHub:** [https://github.com/yeborisov/dwmas](https://github.com/yeborisov/dwmas)
+
 | Документ | Съдържание |
 |---|---|
 | [pregled.md](./pregled.md) | Преглед на проекта, стек, бързо стартиране |

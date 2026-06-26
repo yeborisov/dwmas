@@ -5,6 +5,7 @@
 - **Курс:** Full Stack Application Development with Node.js + Express.js + React.js – 2026
 - **Автор:** Yordan B.
 - **ФН:** 9MI3400735
+- **GitHub:** [https://github.com/yeborisov/dwmas](https://github.com/yeborisov/dwmas)
 
 ---
 
