@@ -6,7 +6,7 @@ import { useAuthStore } from '../store/auth';
 
 describe('ProtectedRoute', () => {
   it('renders child if authenticated', () => {
-    useAuthStore.setState({ user: { id: '1', username: 'dev', role: 'DEVELOPER' } });
+    useAuthStore.setState({ user: { id: '1', username: 'dev', role: 'DEVELOPER' }, isBootstrapping: false });
     render(
       <MemoryRouter>
         <ProtectedRoute>

@@ -1,5 +1,12 @@
 import { tokenPool } from '../lib/tokenPool';
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
+
+vi.mock('@octokit/auth-app', () => ({
+  createAppAuth: () => async () => ({
+    token: 'ghs_mock_app_token',
+    expiresAt: new Date(Date.now() + 3600_000).toISOString()
+  })
+}));
 
 describe('Token Pool Failover', () => {
   beforeAll(async () => {
