@@ -356,21 +356,8 @@ async function fetchRunsViaREST(owner: string, repo: string): Promise<GithubWork
 /*  Batch jobs fetching via GraphQL                                    */
 /* ------------------------------------------------------------------ */
 
-interface GraphQLJobNode {
-  databaseId: number;
-  name: string;
-  status: string | null;
-  conclusion: string | null;
-  startedAt: string | null;
-  completedAt: string | null;
-  runner?: { name: string | null } | null;
-  url: string | null;
-}
-
 /**
- * Batch-fetch jobs for multiple runs via GraphQL aliased queries.
- * Each aliased field fetches jobs for one run, reducing N requests to 1.
- * GitHub GraphQL allows up to ~500kb query size; we batch up to 25 runs per request.
+ * Batch-fetch jobs for multiple workflow runs via REST.
  */
 const BATCH_SIZE_JOBS = 25;
 
@@ -388,89 +375,28 @@ export async function batchFetchJobsViaGraphQL(
   }
 
   for (const batch of batches) {
-    try {
-      // Build aliased GraphQL query
-      const fragments = batch.map(
-        (runId, idx) => `
-          run_${idx}: workflowRun(databaseId: ${runId}) {
-            databaseId
-            jobs(first: 100) {
-              nodes {
-                databaseId
-                name
-                status
-                conclusion
-                startedAt
-                completedAt
-                runner { name }
-                url
-              }
-            }
-          }`
-      );
-
-      const query = `query ($owner: String!, $name: String!) {
-        repository(owner: $owner, name: $name) {
-          ${fragments.join('\n')}
-        }
-        rateLimit { remaining resetAt }
-      }`;
-
-      const response = await withRetry(() =>
-        octokit.graphql<Record<string, unknown>>(query, { owner, name: repo })
-      );
-
-      const repoData = response.repository as Record<string, {
-        databaseId: number;
-        jobs?: { nodes: GraphQLJobNode[] };
-      }>;
-
-      for (let idx = 0; idx < batch.length; idx++) {
-        const alias = `run_${idx}`;
-        const runData = repoData[alias];
-        if (!runData?.jobs?.nodes) continue;
-
-        const jobs: GithubJob[] = runData.jobs.nodes.map((node) => ({
-          id: node.databaseId,
-          run_id: batch[idx],
-          name: node.name,
-          status: node.status?.toLowerCase() ?? 'unknown',
-          conclusion: node.conclusion?.toLowerCase() ?? null,
-          started_at: node.startedAt,
-          completed_at: node.completedAt,
-          runner_name: node.runner?.name ?? null,
-          html_url: node.url
-        }));
-
-        result.set(batch[idx], jobs);
-      }
-    } catch (error) {
-      logger.warn(`GraphQL batch jobs fetch failed for batch, falling back to REST: ${String(error)}`);
-      // Fallback to individual REST calls for this batch
-      for (const runId of batch) {
-        if (result.has(runId)) continue;
-        try {
-          const resp = await withRetry(() =>
-            octokit.actions.listJobsForWorkflowRun({ owner, repo, run_id: runId, per_page: 100 })
-          );
-          result.set(
-            runId,
-            resp.data.jobs.map((j) => ({
-              id: j.id,
-              run_id: runId,
-              name: j.name,
-              status: j.status ?? 'unknown',
-              conclusion: j.conclusion ?? null,
-              started_at: j.started_at ?? null,
-              completed_at: j.completed_at ?? null,
-              runner_name: j.runner_name ?? null,
-              html_url: j.html_url ?? null
-            }))
-          );
-        } catch (innerError) {
-          logger.error(`Failed to fetch jobs for run ${runId}: ${String(innerError)}`);
-          result.set(runId, []);
-        }
+    for (const runId of batch) {
+      try {
+        const resp = await withRetry(() =>
+          octokit.actions.listJobsForWorkflowRun({ owner, repo, run_id: runId, per_page: 100 })
+        );
+        result.set(
+          runId,
+          resp.data.jobs.map((j) => ({
+            id: j.id,
+            run_id: runId,
+            name: j.name,
+            status: j.status ?? 'unknown',
+            conclusion: j.conclusion ?? null,
+            started_at: j.started_at ?? null,
+            completed_at: j.completed_at ?? null,
+            runner_name: j.runner_name ?? null,
+            html_url: j.html_url ?? null
+          }))
+        );
+      } catch (error) {
+        logger.error(`Failed to fetch jobs for run ${runId}: ${String(error)}`);
+        result.set(runId, []);
       }
     }
   }

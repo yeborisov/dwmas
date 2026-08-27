@@ -15,7 +15,7 @@ ENV PRISMA_SKIP_AUTOINSTALL=true
 ENV PRISMA_GENERATE_SKIP_AUTOINSTALL=true
 ENV PNPM_ALLOW_SCRIPTS="*"
 
-RUN npm install -g pnpm && pnpm install -r --filter @dwmas/api... --frozen-lockfile --prod=false
+RUN npm install -g pnpm@9.12.1 && pnpm install -r --filter @dwmas/api... --frozen-lockfile
 
 # Verify prisma client is installed
 RUN pnpm list @prisma/client --depth -1 || true
