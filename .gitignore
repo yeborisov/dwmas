@@ -7,3 +7,4 @@ coverage
 .turbo
 pnpm-lock.yaml
 *.log
+.claude-flow
