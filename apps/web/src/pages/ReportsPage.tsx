@@ -92,6 +92,17 @@ export function ReportsPage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [createError, setCreateError] = useState<string | null>(null);
 
+  const [editingTemplate, setEditingTemplate] = useState<ReportTemplate | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editType, setEditType] = useState('OPERATIONS');
+  const [editDateRangePreset, setEditDateRangePreset] = useState<'7d' | '30d' | '90d' | 'custom'>('30d');
+  const [editStatus, setEditStatus] = useState('');
+  const [editConclusion, setEditConclusion] = useState('');
+  const [editBranch, setEditBranch] = useState('');
+  const [editActor, setEditActor] = useState('');
+  const [editError, setEditError] = useState<string | null>(null);
+
   const templatesQuery = useQuery({ queryKey: ['report-templates'], queryFn: async () => (await api.get('/reports/templates')).data });
   const templates: ReportTemplate[] = templatesQuery.data?.data ?? [];
 
@@ -122,6 +133,52 @@ export function ReportsPage() {
       if (selectedTemplateId) setSelectedTemplateId('');
     }
   });
+
+  const updateTemplateMutation = useMutation({
+    mutationFn: async ({ id, payload }: { id: string; payload: Record<string, unknown> }) =>
+      api.put(`/reports/templates/${id}`, payload),
+    onSuccess: () => {
+      templatesQuery.refetch();
+      setEditingTemplate(null);
+      setEditError(null);
+    },
+    onError: (error: any) => {
+      setEditError(error?.response?.data?.message || 'Unable to update template.');
+    }
+  });
+
+  function handleEditStart(template: ReportTemplate) {
+    setEditingTemplate(template);
+    setEditName(template.name);
+    setEditDescription(template.description ?? '');
+    setEditType(template.type);
+    setEditDateRangePreset((template.configJson.dateRangePreset as typeof editDateRangePreset) ?? '30d');
+    setEditStatus(template.configJson.status ?? '');
+    setEditConclusion(template.configJson.conclusion ?? '');
+    setEditBranch(template.configJson.branch ?? '');
+    setEditActor(template.configJson.actor ?? '');
+    setEditError(null);
+  }
+
+  function handleEditSave() {
+    if (!editingTemplate) return;
+    updateTemplateMutation.mutate({
+      id: editingTemplate.id,
+      payload: {
+        name: editName,
+        description: editDescription,
+        type: editType,
+        configJson: {
+          dateRangePreset: editDateRangePreset,
+          status: editStatus || undefined,
+          conclusion: editConclusion || undefined,
+          branch: editBranch || undefined,
+          actor: editActor || undefined,
+          exportFormat: 'csv'
+        }
+      }
+    });
+  }
 
   const selectedTemplate = useMemo(() => templates.find((t) => t.id === selectedTemplateId), [templates, selectedTemplateId]);
   const appliedResult: AppliedReportResult | undefined = applyTemplateMutation.data?.data;
@@ -340,6 +397,12 @@ export function ReportsPage() {
                       ⬇ CSV
                     </a>
                     <button
+                      className="btn btn-secondary flex-1 text-xs"
+                      onClick={() => handleEditStart(template)}
+                    >
+                      Edit
+                    </button>
+                    <button
                       className="btn btn-danger flex-1 text-xs"
                       onClick={() => {
                         if (window.confirm(`Delete template "${template.name}"?`)) {
@@ -357,6 +420,68 @@ export function ReportsPage() {
           </div>
         )}
       </SectionCard>
+
+      {/* ── Edit template form ── */}
+      {editingTemplate ? (
+        <SectionCard title={`Edit: ${editingTemplate.name}`} description="Update the template filters and save.">
+          <div className="grid gap-3 md:grid-cols-2">
+            <FormField label="Template name">
+              <input className="field" value={editName} onChange={(e) => setEditName(e.target.value)} />
+            </FormField>
+            <FormField label="Template type">
+              <select className="field" value={editType} onChange={(e) => setEditType(e.target.value)}>
+                <option value="OPERATIONS">Operations</option>
+                <option value="HEALTH">Health</option>
+                <option value="DEPLOYMENT">Deployment</option>
+                <option value="ACTIVITY">Activity</option>
+                <option value="CUSTOM">Custom</option>
+              </select>
+            </FormField>
+            <FormField label="Description" className="md:col-span-2">
+              <textarea className="field textarea-field" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
+            </FormField>
+            <FormField label="Date range">
+              <select className="field" value={editDateRangePreset} onChange={(e) => setEditDateRangePreset(e.target.value as typeof editDateRangePreset)}>
+                <option value="7d">Last 7 days</option>
+                <option value="30d">Last 30 days</option>
+                <option value="90d">Last 90 days</option>
+                <option value="custom">Custom</option>
+              </select>
+            </FormField>
+            <FormField label="Status filter">
+              <select className="field" value={editStatus} onChange={(e) => setEditStatus(e.target.value)}>
+                <option value="">Any</option>
+                <option value="completed">Completed</option>
+                <option value="in_progress">In progress</option>
+                <option value="queued">Queued</option>
+              </select>
+            </FormField>
+            <FormField label="Conclusion filter">
+              <select className="field" value={editConclusion} onChange={(e) => setEditConclusion(e.target.value)}>
+                <option value="">Any</option>
+                <option value="success">Success</option>
+                <option value="failure">Failure</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="timed_out">Timed out</option>
+                <option value="skipped">Skipped</option>
+              </select>
+            </FormField>
+            <FormField label="Branch filter">
+              <input className="field" value={editBranch} onChange={(e) => setEditBranch(e.target.value)} placeholder="e.g. main, develop" />
+            </FormField>
+            <FormField label="Actor filter">
+              <input className="field" value={editActor} onChange={(e) => setEditActor(e.target.value)} placeholder="GitHub username" />
+            </FormField>
+          </div>
+          {editError ? <p className="mt-2 text-xs text-rose-200">{editError}</p> : null}
+          <div className="mt-4 flex justify-end gap-2">
+            <button className="btn btn-secondary" onClick={() => setEditingTemplate(null)}>Cancel</button>
+            <button className="btn btn-primary" onClick={handleEditSave} disabled={!editName || updateTemplateMutation.isPending}>
+              {updateTemplateMutation.isPending ? 'Saving…' : 'Save changes'}
+            </button>
+          </div>
+        </SectionCard>
+      ) : null}
 
       {/* ── Applied result (Grafana panel output) ── */}
       {selectedTemplate && appliedResult ? (
